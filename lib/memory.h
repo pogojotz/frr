@@ -108,7 +108,7 @@ struct memgroup {
  */
 #define DECLARE_MTYPE(name)                                                    \
 	extern struct memtype _mt_##name;                                      \
-	extern struct memtype MTYPE_##name[1];                                 \
+	extern struct memtype * const MTYPE_##name;                            \
 	/* end */
 
 #define DEFINE_MTYPE_ATTR(group, mname, attr, desc)                            \
@@ -141,14 +141,13 @@ struct memgroup {
 /* can't quite get gcc to emit the alias correctly, so asm-alias it is :/ */
 #define DEFINE_MTYPE(group, name, desc)                                        \
 	DEFINE_MTYPE_ATTR(group, name, , desc)                                 \
-	__asm__(".equiv MTYPE_" #name ", _mt_" #name "\n\t"                    \
-		".global MTYPE_" #name "\n");                                  \
+	struct memtype * const MTYPE_##name = &_mt_##name;                     \
 	/* end */
+
 /* and this one's borked on clang, it drops static on aliases :/, so... asm */
 #define DEFINE_MTYPE_STATIC(group, name, desc)                                 \
 	DEFINE_MTYPE_ATTR(group, name, static, desc)                           \
-	extern struct memtype MTYPE_##name[1];                                 \
-	__asm__(".equiv MTYPE_" #name ", _mt_" #name "\n");                    \
+	static struct memtype * const MTYPE_##name = &_mt_##name;              \
 	/* end */
 
 DECLARE_MGROUP(LIB)
